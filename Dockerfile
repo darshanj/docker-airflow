@@ -4,8 +4,8 @@
 # BUILD: docker build --rm -t puckel/docker-airflow .
 # SOURCE: https://github.com/puckel/docker-airflow
 
-FROM python:3.6-slim
-LABEL maintainer="Puckel_"
+FROM gettyimages/spark
+MAINTAINER Darshan<darshanjani100@gmail.com>
 
 # Never prompts the user for choices on installation/configuration of packages
 ENV DEBIAN_FRONTEND noninteractive
@@ -24,14 +24,21 @@ ENV LANG en_US.UTF-8
 ENV LC_ALL en_US.UTF-8
 ENV LC_CTYPE en_US.UTF-8
 ENV LC_MESSAGES en_US.UTF-8
+ENV LC_ALL en_US.UTF-8
 
 RUN set -ex \
     && buildDeps=' \
         freetds-dev \
+        python-dev \
+	    python3-dev \
         libkrb5-dev \
         libsasl2-dev \
         libssl-dev \
         libffi-dev \
+        libxslt-dev \
+        build-essential \
+        libblas-dev \
+        liblapack-dev \
         libpq-dev \
         git \
     ' \
@@ -42,6 +49,8 @@ RUN set -ex \
         freetds-bin \
         build-essential \
         default-libmysqlclient-dev \
+        python-pip \
+        python-requests \
         apt-utils \
         curl \
         rsync \
@@ -51,13 +60,18 @@ RUN set -ex \
     && locale-gen \
     && update-locale LANG=en_US.UTF-8 LC_ALL=en_US.UTF-8 \
     && useradd -ms /bin/bash -d ${AIRFLOW_HOME} airflow \
+    && python -m pip install -U pip \
     && pip install -U pip setuptools wheel \
+    && pip install Cython \
     && pip install pytz \
     && pip install pyOpenSSL \
     && pip install ndg-httpsclient \
     && pip install pyasn1 \
     && pip install apache-airflow[crypto,celery,postgres,hive,jdbc,mysql,ssh${AIRFLOW_DEPS:+,}${AIRFLOW_DEPS}]==${AIRFLOW_VERSION} \
     && pip install 'redis>=2.10.5,<3' \
+    && pip install "git+https://github.com/apache/incubator-airflow.git#egg=airflow[crypto,celery,postgres,hive,hdfs,jdbc]" \
+    && pip install celery[redis]==3.1.17 \
+    && apt-get remove --purge -yqq $buildDeps \
     && if [ -n "${PYTHON_DEPS}" ]; then pip install ${PYTHON_DEPS}; fi \
     && apt-get purge --auto-remove -yqq $buildDeps \
     && apt-get autoremove -yqq --purge \
