@@ -1,0 +1,11 @@
+version: '3.2'
+services:
+  infrabox:
+    image: airflow-spark
+    build: .
+    stdin_open: true
+    tty: true
+    volumes:
+      - ./dags:/usr/local/airflow/dags
+    ports:
+      - "8080:8080"
